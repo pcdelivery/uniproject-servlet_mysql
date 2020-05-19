@@ -1,10 +1,13 @@
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.function.Function;
 
 class DatabaseManager {
     private static final String DATABASE_MANAGER_TAG = "DataBaseManager: ";
 
     //@todo: ? OR % OR $ OR ~
-    private static final String DIVIDER = "?";
+    public static final String ROW_DIVIDER = "?";
 
     private static final String databaseSimplifiedURL = "jdbc:mysql://localhost:3306/arcantowndb" +
             "?serverTimezone=UTC";
@@ -15,41 +18,84 @@ class DatabaseManager {
             "&useLegacyDatetimeCode=false"+
             "&serverTimezone=UTC";
 
-    private Connection connection;
-    private String _query;
-    public String _result_string;
+    public static String lastQuery;
+    public static String lastResult;
 
-    DatabaseManager() {
-        _query = null;
+    public static ArrayList<String> getAllCountriesInSQL() {
+        lastQuery = "SELECT country_name FROM countries;";
+        ResultSet set = fetch(lastQuery);
+
+        if (set == null)
+            // @todo?
+            return null;
+
+        // todo: set.getArray
+        ArrayList<String> res = new ArrayList<String>();
+
+        try {
+            while(set.next())
+                res.add(set.getString(1));
+        } catch (SQLException x) {
+            System.out.println(DATABASE_MANAGER_TAG + "Fetch: Error: " + x.getErrorCode());
+            res = null;
+        }
+
+        lastResult = res.toString();
+        return res;
     }
 
-    public void setQuery(String query) {
-        this._query = query;
+    public static ArrayList<String> getAllTownsInSQL(String country) {
+        lastQuery = "SELECT town_name FROM towns WHERE country='" + country + "';";
+        ResultSet set = fetch(lastQuery);
+
+        if (set == null)
+            // @todo?
+            return null;
+
+        // todo: set.getArray
+        ArrayList<String> res = new ArrayList<String>();
+
+        try {
+            while(set.next()) {
+                res.add(set.getString(1));
+            }
+        } catch (SQLException x) {
+            System.out.println(DATABASE_MANAGER_TAG + "Fetch: Error: " + x.getErrorCode());
+            res = null;
+        }
+
+        lastResult = res.toString();
+        return res;
     }
 
-    public String databaseGetCountries() {
-        _query = "SELECT country_name FROM countries;";
+    //@todo: town doubles
+    public static ArrayList<String> getAllPlacesInSQL(String town) {
+        lastQuery = "SELECT place_name, latitude, longitude FROM places WHERE town='" + town + "';";
+        ResultSet set = fetch(lastQuery);
 
-        return execute__countries();
+        if (set == null)
+            // @todo?
+            return null;
+
+        // todo: set.getArray
+        ArrayList<String> res = new ArrayList<String>();
+
+        try {
+            while(set.next()) {
+                res.add(set.getString(1) + ROW_DIVIDER);
+                res.add(set.getDouble(2) + ROW_DIVIDER);
+                res.add(set.getDouble(3) + ROW_DIVIDER);
+            }
+        } catch (SQLException x) {
+            System.out.println(DATABASE_MANAGER_TAG + "Fetch: Error: " + x.getErrorCode());
+            res = null;
+        }
+
+        lastResult = res.toString();
+        return res;
     }
 
-    public String databaseGetPlaces(String town) {
-        //@todo: town doubles
-        if (town == null)
-            return "";
-
-        _query = "SELECT place_name, latitude, longitude FROM places WHERE town='" + town + "';";
-        return execute__places();
-    }
-
-    public String databaseGetTownsByCountry(String country) {
-        if (country == null)
-            return "";
-
-        _query = "SELECT town_name FROM towns WHERE country='" + country + "';";
-        return execute__towns();
-    }
-
+    /*
     public String databaseCompareAccount(String login, String email, String password) {
         if (login != null && email != null && password != null) {
             StringBuilder sb = new StringBuilder();
@@ -63,137 +109,69 @@ class DatabaseManager {
         }
 
         return "false";
-    }
 
-    private String execute__countries() {
-        try {
-            connection = DriverManager.getConnection(databaseSimplifiedURL, "root", "qwerty123");
 
-            if (!connection.isClosed()) {
-                System.out.println(DATABASE_MANAGER_TAG + "Connection established");
-                System.out.println(DATABASE_MANAGER_TAG + "Query to execute: " + _query);
-
-                Statement statement = connection.createStatement();
-                ResultSet data = statement.executeQuery(_query);
-
-                StringBuilder resultSet = new StringBuilder();
-                while(data.next()) {
-                    resultSet.append(data.getString(1)).append('|');
-                }
-
-                connection.close();
-                _result_string = resultSet.toString();
-
-                System.out.println("DatabaseManager: " + "Connection was closed as planned");
-                System.out.println("DatabaseManager: " + "Data set: " + _result_string);
-
-                return _result_string;
-            } else {
-                System.out.println("DatabaseManager: " + "Connection is not established");
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-
-        return "";
-    }
-
-    private String execute__towns() {
-        try {
-            connection = DriverManager.getConnection(databaseSimplifiedURL, "root", "qwerty123");
-
-            if (!connection.isClosed()) {
-                System.out.println(DATABASE_MANAGER_TAG + "Connection established");
-                System.out.println(DATABASE_MANAGER_TAG + "Query to execute: " + _query);
-
-                Statement statement = connection.createStatement();
-                ResultSet data = statement.executeQuery(_query);
-
-                StringBuilder resultSet = new StringBuilder();
-                while(data.next()) {
-                    resultSet.append(data.getString(1)).append('|');
-                }
-
-                connection.close();
-                _result_string = resultSet.toString();
-
-                System.out.println("DatabaseManager: " + "Connection was closed as planned");
-                System.out.println("DatabaseManager: " + "Data set: " + _result_string);
-
-                return _result_string;
-            } else {
-                System.out.println("DatabaseManager: " + "Connection is not established");
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-
-        return "";
-    }
-
-    private String execute__places() {
-        try {
-            connection = DriverManager.getConnection(databaseSimplifiedURL, "root", "qwerty123");
-
-            if (!connection.isClosed()) {
-                System.out.println(DATABASE_MANAGER_TAG + "Connection established");
-                System.out.println(DATABASE_MANAGER_TAG + "Query to execute: " + _query);
-
-                Statement statement = connection.createStatement();
-                ResultSet data = statement.executeQuery(_query);
-
-                StringBuilder resultSet = new StringBuilder();
-                while(data.next()) {
-                    resultSet.append(data.getString(1)).append('|');
-                    resultSet.append(data.getDouble(2)).append('|');
-                    resultSet.append(data.getDouble(3)).append('|');
-                }
-
-                connection.close();
-                _result_string = resultSet.toString();
-
-                System.out.println("DatabaseManager: " + "Connection was closed as planned");
-                System.out.println("DatabaseManager: " + "Data set: " + _result_string);
-
-                return _result_string;
-            } else {
-                System.out.println("DatabaseManager: " + "Connection is not established");
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-
-        return "";
-    }
-
-    private String execute__auth() {
-        try {
-            connection = DriverManager.getConnection(databaseSimplifiedURL, "root", "qwerty123");
-
-            if (!connection.isClosed()) {
-                System.out.println(DATABASE_MANAGER_TAG + "Connection established");
-                System.out.println(DATABASE_MANAGER_TAG + "Query to execute: " + _query);
-
-                Statement statement = connection.createStatement();
-                ResultSet data = statement.executeQuery(_query);
-
-                if (!data.next())
-                    return "false";
-
-                connection.close();
-
-                System.out.println("DatabaseManager: " + "Connection was closed as planned");
-                System.out.println("DatabaseManager: " + "Result: true");
-
-                return "true";
-            } else {
-                System.out.println("DatabaseManager: " + "Connection is not established");
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
+        if (!data.next())
+            return "false";
 
         // @todo: error vs false
-        return "connection_error";
+    }
+     */
+
+    /**
+     * Fetching items from MySQL database via static databaseURL
+     * @since 19-05-2020
+     * @param SQLQuery
+     * @return set of received items or Null
+     */
+    private static ResultSet fetch(String SQLQuery) {
+        Connection connection;
+        ResultSet data = null;
+
+        try {
+            connection = DriverManager.getConnection(databaseSimplifiedURL, "root", "qwerty123");
+
+            if (!connection.isClosed()) {
+                // @todo Log
+                System.out.println(DATABASE_MANAGER_TAG + "Fetch: Connection established");
+                System.out.println(DATABASE_MANAGER_TAG + "Fetch: Query to execute: " + SQLQuery);
+
+                Statement statement = connection.createStatement();
+                data = statement.executeQuery(SQLQuery);
+
+                connection.close();
+
+                System.out.println(DATABASE_MANAGER_TAG + "Fetch: Connection was closed as planned");
+            } else
+                System.out.println(DATABASE_MANAGER_TAG + "Fetch: Error: Connection was not established");
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            System.out.println(DATABASE_MANAGER_TAG + "Fetch: Error while fetching");
+        }
+
+        return data;
+    }
+
+    public String _databaseGetTry() {
+        return "{\n" +
+                "        \"placeTitle\" : \"Kremlin\",\n" +
+                "            \"placeImage\" : \"/kremlin.png\",\n" +
+                "            \"questions\" : [" +
+                "{\n" +
+                "        \"question-type\" : \"text\",\n" +
+                "            \"question-unique-image\" : \"null\",\n" +
+                "            \"question\" : \"Why are you gay?\",\n" +
+                "            \"answers\" : [\"You gAy\", \"Like really gay\", \"Ur mom gay\"],\n" +
+                "        \"correctAnswerIndex\" : 3\n" +
+                "}," +
+                "{\n" +
+                "        \"question-type\" : \"text\",\n" +
+                "            \"question-unique-image\" : \"null\",\n" +
+                "            \"question\" : \"Why kremlin gay?\",\n" +
+                "            \"answers\" : [\"no you gay\", \"rusophobic gay\", \"actually ur mom gay\", \"Mah Empire\", \"dunno just another answer\", \"dunno just another answer2\", \"dunno just another answer3\", \"dunno just another answer4\"],\n" +
+                "        \"correctAnswerIndex\" : 3\n" +
+                "}]\n" +
+                "    }";
     }
 }

@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +22,18 @@ public class MyServlet extends HttpServlet {
 
         if (reqCode == null) {
             //@todo
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверный запрос");
+//            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверный запрос");
+            PrintWriter pt = response.getWriter();
+            pt.println("ERROR");
+            pt.flush();
+        }
+        else if (reqCode.equals("countries")) {
+            PrintWriter pt = response.getWriter();
+            pt.println(DatabaseManager.getAllCountriesInSQL());
+            pt.flush();
+
+//            request.getSession().setAttribute("message", dm.databaseGetCountries());
+//            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
         }
         else if (reqCode.equals("towns")) {
             String country = request.getParameter("country");
@@ -30,7 +42,6 @@ public class MyServlet extends HttpServlet {
 //                request.getSession().setAttribute("err", true);
                 request.getSession().setAttribute("message", "error");
 
-            DatabaseManager dm = new DatabaseManager();
 
             // test
 //            StringBuilder sb = new StringBuilder();
@@ -47,8 +58,25 @@ public class MyServlet extends HttpServlet {
 //            request.getSession().setAttribute("want", sb.toString());
             // /test
 
-            request.getSession().setAttribute("message", dm.databaseGetTownsByCountry(country));
-            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
+            PrintWriter pt = response.getWriter();
+            pt.println(DatabaseManager.getAllTownsInSQL(country));
+            pt.flush();
+
+//            request.getSession().setAttribute("message", dm.databaseGetTownsByCountry(country));
+//            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
+        }
+        else if (reqCode.equals("places")) {
+            String town = request.getParameter("town");
+            if(town == null)
+//                request.getSession().setAttribute("err", true);
+                request.getSession().setAttribute("message", "error");
+
+            PrintWriter pt = response.getWriter();
+            pt.println(DatabaseManager.getAllPlacesInSQL(town));
+            pt.flush();
+
+//            request.getSession().setAttribute("message", dm.databaseGetPlaces(town));
+//            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
         }
         else if (reqCode.equals("auth")) {
             String login = request.getParameter("login");
@@ -61,26 +89,37 @@ public class MyServlet extends HttpServlet {
 
             DatabaseManager dm = new DatabaseManager();
 
-            request.getSession().setAttribute("message", dm.databaseCompareAccount(login, email, password));
-            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
-        }
-        else if (reqCode.equals("countries")) {
-            DatabaseManager dm = new DatabaseManager();
+            PrintWriter pt = response.getWriter();
+//            pt.println(dm.databaseCompareAccount(login, email, password));
+            pt.flush();
 
-            request.getSession().setAttribute("message", dm.databaseGetCountries());
-            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
+//            request.getSession().setAttribute("message", dm.databaseCompareAccount(login, email, password));
+//            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
         }
-        else if (reqCode.equals("places")) {
-            String town = request.getParameter("town");
+        else if (reqCode.equals("quiz")) {
+            String types = request.getParameter("types");
+            String placeid = request.getParameter("placeid");
 
+            types = types == null ? "null" : types;
+            placeid = placeid == null ? "null" : placeid;
+
+            System.out.println("QUIZ GET: " + "Types: " + types);
+            System.out.println("QUIZ GET: " + "PlaceID: " + placeid);
+
+/*
             if(town == null)
 //                request.getSession().setAttribute("err", true);
                 request.getSession().setAttribute("message", "error");
+*/
 
             DatabaseManager dm = new DatabaseManager();
 
-            request.getSession().setAttribute("message", dm.databaseGetPlaces(town));
-            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
+            PrintWriter pt = response.getWriter();
+            pt.println(dm._databaseGetTry());
+            pt.flush();
+
+//            request.getSession().setAttribute("message", dm.databaseGetPlaces(town));
+//            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
         }
 /*
         for (int i = 0; i < usersToHandle.length; i++) {
