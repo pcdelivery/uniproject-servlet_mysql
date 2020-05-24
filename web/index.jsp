@@ -22,20 +22,41 @@
             <td>null (пустое поле аргументов)</td>
         </tr>
         <tr>
+            <td>Список стран в БД</td>
+            <td>want=countries=[название_страны]</td>
+        </tr>
+        <tr>
             <td>Список городов страны</td>
             <td>want=towns&country=[название_страны]</td>
         </tr>
         <tr>
-            <td>Подтверждение аутентификации</td>
-            <td>want=auth&login=[логин]&email=[элпочта]&password=[пароль]</td>
+            <td>Список всех мест</td>
+            <td>want=places&country=[название_страны]&town=[название_города]</td>
         </tr>
         <tr>
-            <td>Список стран в базе данных</td>
-            <td>want=countries</td>
+            <td>Информация об аккаунте</td>
+            <td>want=account&email=[элпочта]</td>
         </tr>
         <tr>
-            <td>Список мест в текущем городе</td>
-            <td>want=places&town=[город]</td>
+            <td>Создание нового аккаунта</td>
+            <td>want=put_acc&auth_type=[def/google/facebook]&email=[элпочта]&login=[логин]</td>
+        </tr>
+        <tr>
+            <td>Викторина</td>
+            <td>want=quiz&placeid=[номер_места]</td>
+        </tr>
+        <tr>
+            <td>Обновление одного поля существующего аккаунта</td>
+            <td>want=change&id=[номер_пользователя]$field=[поле]&value=[новое_значение]</td>
+        </tr>
+        <tr>
+            <td>Обновление очков и истории аккаунта (завершение теста)</td>
+            <td>want=update_quiz&id=[номер_пользователя]$placeid=[номер_места]&points=[число_полученных _очков]</td>
+        </tr>
+
+        <tr>
+            <td>Отправка картинки</td>
+            <td>sendpics (В разработке...)</td>
         </tr>
     </table>
   </body>

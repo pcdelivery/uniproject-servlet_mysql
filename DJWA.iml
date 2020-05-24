@@ -21,5 +21,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="com.guicedee.services:javax.servlet-api:62" level="project" />
     <orderEntry type="library" name="mysql-connector-java-8.0.20" level="project" />
+    <orderEntry type="library" name="org.slf4j:slf4j-api:1.7.30" level="project" />
+    <orderEntry type="library" name="jakarta.ws.rs:jakarta.ws.rs-api:2.1.6" level="project" />
+    <orderEntry type="library" name="com.bnorm.ktor.retrofit:ktor-retrofit:0.1.1" level="project" />
   </component>
 </module>
