@@ -1,6 +1,4 @@
-import java.security.DrbgParameters;
 import java.sql.*;
-import java.util.ArrayList;
 
 class DatabaseManager {
     private static final String DATABASE_MANAGER_TAG = "DataBaseManager: ";
@@ -20,6 +18,7 @@ class DatabaseManager {
     public static String lastQuery;
     public static String lastResult;
 
+    public static int SPECS_MODE = 0;
     public static int COUNTRY_MODE = 1;
     public static int TOWN_MODE = 2;
     public static int PLACES_MODE = 3;
@@ -30,9 +29,19 @@ class DatabaseManager {
     public static int ANSWERS_MODE = 8;
 
     /**
+     * Getting array of specialities presented MySQL database
+     * @since 31-05-2020
+     * @return Array {"specs": [...]} of specialities or "false"
+     */
+    public static String getAllSpecsInSQL() {
+        lastQuery = "SELECT text FROM interests;";
+        return fetch(lastQuery, SPECS_MODE);
+    }
+
+    /**
      * Getting array of countries presented MySQL database
      * @since 23-05-2020
-     * @return Array {"countries": [...]} of countries or null
+     * @return Array {"countries": [...]} of countries or "false"
      */
     public static String getAllCountriesInSQL() {
         lastQuery = "SELECT country_name FROM countries;";
@@ -42,7 +51,7 @@ class DatabaseManager {
     /**
      * Getting array of filtered towns presented MySQL database
      * @since 23-05-2020
-     * @return Array {"towns": [...]} of towns or null
+     * @return Array {"towns": [...]} of towns or "false"
      */
     public static String getAllTownsInSQL(String country) {
         lastQuery = "SELECT town_name FROM towns WHERE country='" + country + "';";
@@ -52,7 +61,7 @@ class DatabaseManager {
     /**
      * Getting array of filtered places presented MySQL database
      * @since 23-05-2020
-     * @return Array {"places": [{...},{...},...]} of places or null
+     * @return Array {"places": [{...},{...},...]} of places or "false"
      */
     public static String getAllPlacesInSQL(String country, String town) {
         lastQuery = "SELECT * FROM places WHERE town='" + town + "' AND country='" + country + "';";
@@ -62,7 +71,7 @@ class DatabaseManager {
     /**
      * Getting account info presented MySQL database
      * @since 23-05-2020
-     * @return Arcantown account {"account": {...}} or null
+     * @return Arcantown account {"account": {...}} or "false"
      */
     public static String getAccountInfoInSQL(String email) {
         lastQuery = "SELECT * FROM accounts WHERE email='" + email + "';";
@@ -72,7 +81,7 @@ class DatabaseManager {
     /**
      * Getting quiz data presented in MySQL database
      * @since 24-05-2020
-     * @return Quiz data {"place": {...}, "questions": [{...},{...},...]} or null
+     * @return Quiz data {"place": {...}, "questions": [{...},{...},...]} or "false"
      */
     public static String getQuizInSQL(String placeID) {
         // TODO image
@@ -90,54 +99,60 @@ class DatabaseManager {
 
     /**
      * Creates new account in MySQL database
-     * @since 23-05-2020
-     * @return Number of changed (placed) rows in MySQL database (1 is good)
+     * @since 25-05-2020
+     * @return Newly created account in JSON or "false"
      */
-    public static int createAccountInSQL(String authType, String email, String login) {
+    public static String createAccountInSQL(String authType, String email, String login) {
         lastQuery = String.format(
                 "INSERT INTO `arcantowndb`.`accounts` (`auth_type`, `email`, `login`, `completed`) " +
                         "VALUES ('%s', '%s', '%s', '0');",
                 authType, email, login);
 
         System.out.println(DATABASE_MANAGER_TAG + "Input query to execute: " + lastQuery);
-        return send(lastQuery);
+        return updateAndReceiveAccount(lastQuery, email);
     }
 
     /**
      * Change existing account in MySQL database
-     * @since 23-05-2020
-     * @return Number of changed rows (accounts) in MySQL database (1 is good)
+     * @since 25-05-2020
+     * @return Changed account in JSON or "false"
      */
-    public static int changeAccountProperty(String id, String column, String newValue) {
+    public static String changeAccountProperty(String email, String column, String newValue) {
         lastQuery = String.format(
-                "UPDATE `arcantowndb`.`accounts` SET `%s`='%s' WHERE `id`='%s';",
-                column, newValue, id);
+                "UPDATE `arcantowndb`.`accounts` SET `%s`='%s' WHERE `email`='%s';",
+                column, newValue, email);
+
 
         System.out.println(DATABASE_MANAGER_TAG + "Input query to execute: " + lastQuery);
-        return send(lastQuery);
+        // email = update identifier
+        if (column.equals("email"))
+            return updateAndReceiveAccount(lastQuery, newValue);
+        else
+            return updateAndReceiveAccount(lastQuery, email);
+
     }
 
     /**
      * Change existing account in MySQL database after test completion
-     * @since 23-05-2020
-     * @return Number of changed rows (accounts) in MySQL database (1 is good)
+     * @since 25-05-2020
+     * @return Changed account JSON or "false"
      */
-    public static int appendCompletedQuiz(String userID, String placeID, String points) {
+    public static String appendCompletedQuiz(String email, String placeID, String pointsToAdd) {
         lastQuery = String.format(
-                "UPDATE `arcantowndb`.`accounts` SET `completed`=concat(`completed`,%s), `points`=(`points`+%s) " +
-                        "WHERE `id`='%s';",
-                placeID, points, userID);
+                "UPDATE `arcantowndb`.`accounts` SET `completed`=concat(`completed`,\",\", %s), `points`=(`points`+%s) " +
+                        "WHERE `email`='%s';",
+                placeID, pointsToAdd, email);
 
         System.out.println(DATABASE_MANAGER_TAG + "Updating completed quiz text to execute: " + lastQuery);
-        return send(lastQuery);
+        return updateAndReceiveAccount(lastQuery, email);
     }
 
     /**
      * Connects to MySQL database to send or update data
-     * @since 23-05-2020
-     * @return Number of changed rows in MySQL database (1 is good)
+     * @since 25-05-2020
+     * @return Changed/Created Account or "false"
      */
-    private static int send(String SQLQuery) {
+    private static String updateAndReceiveAccount(String SQLQuery, String email) {
         Connection connection;
         int result = 0;
 
@@ -162,19 +177,22 @@ class DatabaseManager {
             System.out.println(DATABASE_MANAGER_TAG + "Send/Update: Error while updating");
         }
 
-        return result;
+        if (result == 0)
+            return "false";
+        else
+            return getAccountInfoInSQL(email);
     }
 
     /**
      * Fetching items from MySQL database via static databaseURL
-     * @since 19-05-2020
+     * @since 25-05-2020
      * @param SQLQuery: Query to execute
      * @param fetchingMode: see private static values
-     * @return JSON or null
+     * @return JSON or "false"
      */
     private static String fetch(String SQLQuery, int fetchingMode) {
         Connection connection;
-        String result = null;
+        String result = "false";
 
         try {
             connection = DriverManager.getConnection(databaseSimplifiedURL, "root", "qwerty123");
@@ -187,7 +205,9 @@ class DatabaseManager {
                 Statement statement = connection.createStatement();
                 ResultSet data = statement.executeQuery(SQLQuery);
 
-                if (fetchingMode == COUNTRY_MODE)
+                if (fetchingMode == SPECS_MODE)
+                    result = _get_one_in_json(data, "specs");
+                else if (fetchingMode == COUNTRY_MODE)
                     result = _get_one_in_json(data, "countries");
                 else if (fetchingMode == TOWN_MODE)
                     result = _get_one_in_json(data, "towns");
@@ -266,10 +286,10 @@ class DatabaseManager {
     public static String _get_account_in_json(ResultSet set) throws SQLException {
         StringBuilder result = new StringBuilder();
 
-        result.append("{").append("\"account\" : {");
-
         if (!set.next())
-            return null;
+            return "false";
+
+        result.append("{").append("\"account\" : {");
 
         result.append("\"id\": ").append(set.getInt(1)).append(",");
         result.append("\"auth_type\": \"").append(set.getString(2)).append("\",");
@@ -279,7 +299,8 @@ class DatabaseManager {
         result.append("\"points\": ").append(set.getInt(6)).append(",");
         result.append("\"country\": \"").append(set.getString(7)).append("\",");
         result.append("\"town\": \"").append(set.getString(8)).append("\",");
-        result.append("\"completed\": \"").append(set.getString(9)).append("\"");
+        result.append("\"completed\": \"").append(set.getString(9)).append("\",");
+        result.append("\"bonus\": ").append(set.getInt(10));
 
         result.append("}}");
 
@@ -292,7 +313,7 @@ class DatabaseManager {
         StringBuilder result = new StringBuilder();
 
         if (!set.next())
-            return null;
+            return "false";
 
 //        result.append("{").append("\"place\" : {");
         result.append("\"place\" : {");

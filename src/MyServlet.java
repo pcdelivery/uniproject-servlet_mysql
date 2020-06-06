@@ -1,4 +1,8 @@
+import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URL;
+import java.util.Base64;
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -9,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(name = "MyServlet", urlPatterns = "/t")
 public class MyServlet extends HttpServlet {
     private final static String TAG = "Servlet: ";
+    private final static String PATH_IMAGE_PLACE = "arcantown/places/";
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/html; charset=UTF-8");
@@ -21,6 +26,16 @@ public class MyServlet extends HttpServlet {
             PrintWriter pt = response.getWriter();
             pt.println("NULL_ERROR");
             pt.flush();
+
+        } else if (reqCode.equals("specs")) {
+            // Get specs list from arcantown.countries
+            PrintWriter pt = response.getWriter();
+
+            String countries = DatabaseManager.getAllSpecsInSQL();
+
+            System.out.println(TAG + "Specs: " + countries);
+            pt.println(countries);
+            pt.close();
 
         } else if (reqCode.equals("countries")) {
             // Get country list from arcantown.countries
@@ -39,7 +54,7 @@ public class MyServlet extends HttpServlet {
 
             String towns =
                     country == null ?
-                            "-1" : DatabaseManager.getAllTownsInSQL(country);
+                            "false" : DatabaseManager.getAllTownsInSQL(country);
 
             System.out.println(TAG + "Towns: " + towns);
             pt.println(towns);
@@ -54,7 +69,7 @@ public class MyServlet extends HttpServlet {
 
             String places =
                     (country == null || town == null) ?
-                            "-1" : DatabaseManager.getAllPlacesInSQL(country, town);
+                            "false" : DatabaseManager.getAllPlacesInSQL(country, town);
 
             System.out.println(TAG + "Places: " + places);
             pt.println(places);
@@ -68,7 +83,7 @@ public class MyServlet extends HttpServlet {
 
             String account =
                     email == null ?
-                            "-1" : DatabaseManager.getAccountInfoInSQL(email);
+                            "false" : DatabaseManager.getAccountInfoInSQL(email);
 
             System.out.println(TAG + "Account: " + account);
             pt.println(account);
@@ -81,11 +96,9 @@ public class MyServlet extends HttpServlet {
             String login = request.getParameter("login");
             PrintWriter pt = response.getWriter();
 
-            int changed =
+            String result =
                     (authType == null || email == null || login == null) ?
-                            -1 : DatabaseManager.createAccountInSQL(authType, email, login);
-
-            String result = changed > 0 ? "true" : "false";
+                            "false" : DatabaseManager.createAccountInSQL(authType, email, login);
 
             System.out.println(TAG + "New account creation: " + result);
             pt.println(result);
@@ -102,7 +115,7 @@ public class MyServlet extends HttpServlet {
 
             String quiz =
                     placeID == null ?
-                            "-1" : DatabaseManager.getQuizInSQL(placeID);
+                            "false" : DatabaseManager.getQuizInSQL(placeID);
 
             System.out.println(TAG + "Quiz: " + quiz);
             pt.println(quiz);
@@ -111,16 +124,14 @@ public class MyServlet extends HttpServlet {
 
         } else if (reqCode.equals("change")) {
             // Get true/false - status of column updating
-            String clientID = request.getParameter("id");
+            String email = request.getParameter("email");
             String field = request.getParameter("field");
             String value = request.getParameter("value");
             PrintWriter pt = response.getWriter();
 
-            int changed =
-                    (clientID == null || field == null || value == null) ?
-                            -1 : DatabaseManager.changeAccountProperty(clientID, field, value);
-
-            String result = changed > 0 ? "true" : "false";
+            String result =
+                    (email == null || field == null || value == null) ?
+                            "false" : DatabaseManager.changeAccountProperty(email, field, value);
 
             System.out.println(TAG + "Account update: " + result);
             pt.println(result);
@@ -129,22 +140,82 @@ public class MyServlet extends HttpServlet {
 
         } else if (reqCode.equals("update_quiz")) {
             // Get true/false - status of columns updating
-            String userID = request.getParameter("id");
+            String email = request.getParameter("email");
             String placeID = request.getParameter("placeid");
             String points = request.getParameter("points");
             PrintWriter pt = response.getWriter();
 
-            int changed =
-                    (userID == null || placeID == null || points == null) ?
-                            -1 : DatabaseManager.appendCompletedQuiz(userID, placeID, points);
-
-            String result = changed > 0 ? "true" : "false";
+            String result =
+                    (email == null || placeID == null || points == null) ?
+                            "false" : DatabaseManager.appendCompletedQuiz(email, placeID, points);
 
             System.out.println(TAG + "Quiz account update: " + result);
             pt.println(result);
             pt.flush();
             pt.close();
 
+        } else if (reqCode.equals("load_pic")) {
+            //todo try/catch
+            String url = request.getParameter("url");
+            PrintWriter pt = response.getWriter();
+
+            BufferedImage image = ImageIO.read(new URL(url));
+
+            File file = new File("arcantown/places/tryimageio");
+            boolean res = ImageIO.write(image, "png", file);
+
+            if (res)
+                System.out.println(TAG + "Success: Image write");
+            else
+                System.out.println(TAG + "Not success: Image write");
+
+//            pt.println(String.format("<img src=\"%s\" alt=\"Haha. error\" width=\"255\" height=\"255\">",
+//                    "tryimageio"));
+//            pt.println("<img src=\"%s\" alt=\"Haha. error\" width=\"255\" height=\"255\">");
+//            System.out.println(TAG + "PATH: " + request.getContextPath());
+//
+//            request.getSession().setAttribute("image", "tryimageio.png");
+//            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
+//            pt.println("<img src=\"%s\">");
+
+            FileInputStream fs = new FileInputStream(file);
+            String line = "";
+            byte[] bytes = new byte[(int)file.length()];
+            fs.read(bytes);
+            fs.close();
+            line = Base64.getEncoder().encodeToString(bytes);
+
+            System.out.println(TAG + "Success: Http: " + line);
+            String nLine = "";
+
+            for(int i = 0; i < 2000; i++)
+                nLine += "a";
+
+//            pt.println(line);
+            pt.println(nLine);
+            pt.println(nLine);
+            pt.println(nLine);
+            pt.println(nLine);
+            pt.flush();
+            pt.close();
+
+//            BufferedInputStream stream = new BufferedInputStream(new URL(url).openStream());
+//            ByteArrayOutputStream out = new ByteArrayOutputStream();
+//
+//            byte[] buf = new byte[1024];
+//            int b;
+//
+//            while ((b = stream.read(buf)) != -1)
+//                out.write(buf, 0, b);
+//
+//            stream.close();
+//            out.close();
+//            byte[] bres = out.toByteArray();
+
+
+//            System.out.println(TAG + "Image added: " + result.toString());
+//            pt.print(result.toString());
+//            pt.close();
         } else if (reqCode.equals("sendpics")) {
             // TODO
             System.out.println("HERE");
@@ -163,6 +234,7 @@ public class MyServlet extends HttpServlet {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
 
 //            DataInputStream stream = new DataInputStream(request.getInputStream());
 //            byte[] buffer = new byte[255];
@@ -171,8 +243,6 @@ public class MyServlet extends HttpServlet {
 //            String res = stream.readAllBytes().toString();
 //
 //            stream.close();
-//            org.slf4j.Logger logger = LoggerFactory.getLogger(MyServlet.class);
-//            logger.info(res);
 
 //            String result = "false";
 //
@@ -195,7 +265,6 @@ public class MyServlet extends HttpServlet {
 
 //            request.getSession().setAttribute("message", dm.databaseGetPlaces(town));
 //            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/DisplayPersonalInfo.jsp"));
-        }
 
         /*
         for (int i = 0; i < usersToHandle.length; i++) {

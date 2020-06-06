@@ -11,83 +11,16 @@
 <body>
     <h1>
 <%--        Код запроса <%=session.getAttribute("want")%>--%>
-        <%=session.getAttribute("message")%>
-    </h1>
-<%--    <table border='1'>--%>
-<%--        <tr>--%>
-<%--            <td><b>Название</b></td>--%>
-<%--            <td><b>Автор</b></td>--%>
-<%--            <td><b>Год публикации</b></td>--%>
-<%--            <td><b>Год покупки</b></td>--%>
-<%--            <td><b>Прочитал</b></td>--%>
-<%--            <td><b>Наличие</b></td>--%>
-<%--        </tr>--%>
-
         <%
-//            if (session.getAttribute("user").equals("Иван Алексеевич")) {
-//            if (session.getAttribute("user").equals("Иван Алексеевич")) {
-            if(false) {
+//            String link = (String) request.getSession().getAttribute("image");
+            String link = "web/places/tryimageio";
+            System.out.println("PATH: " + request.getContextPath() + " Image: " + link);
+
         %>
-        <tr>
-            <td>Бесы</td>
-            <td>Достоевский Ф.М.</td>
-            <td>1872</td>
-            <td>2011</td>
-            <td>Да</td>
-            <td>Нет</td>
-        </tr>
-        <tr>
-            <td>Записки сумасшедшего</td>
-            <td>Толстой Л.Н.</td>
-            <td>1912</td>
-            <td>1999</td>
-            <td>Да</td>
-            <td>Да</td>
-        </tr>
-        <tr>
-            <td>Собачье Сердце</td>
-            <td>Булгаков М.А.</td>
-            <td>1987</td>
-            <td>2019</td>
-            <td>Нет</td>
-            <td>Да</td>
-        </tr>
+    </h1>
 
-        <% }
-//            else if (session.getAttribute("user").equals("Алексей Иванов")) {
-            else if (false) {
-        %>
-
-        <tr>
-            <td>Тоска</td>
-            <td>Чехов А.П.</td>
-            <td>1886</td>
-            <td>2014</td>
-            <td>Нет</td>
-            <td>Да</td>
-        </tr>
-        <tr>
-            <td>Герой нашего времени</td>
-            <td>Лермонтов М.Ю.</td>
-            <td>1840</td>
-            <td>2005</td>
-            <td>Да</td>
-            <td>Да</td>
-        </tr>
-
-        <% }
-            else if (false) { %>
-        <tr>
-            <td>Error</td>
-            <td>Error</td>
-            <td>Error</td>
-            <td>Error</td>
-            <td>Error</td>
-            <td>Error</td>
-        </tr>
-        <% } %>
-
-    </table>
+<%--    <img src="../bin/arcantown/places/tryimageio" height="255" width="255" alt="Error">--%>
+    <img src="<%=link%>" height="255" width="255" alt="Error2">
 <%--<%@include file="ErrorManager.jsp"%>--%>
 </body>
 </html>
